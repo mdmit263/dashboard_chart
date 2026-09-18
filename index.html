@@ -14,8 +14,8 @@
     --red: #C0392B;
   }
   * { box-sizing: border-box; }
-  html, body { margin:0; padding:0; background:#F0F2F5; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif; color:var(--text); }
-  .wrap { display:flex; flex-wrap: wrap; gap:18px; padding:22px; align-items: flex-start; }
+  html, body { margin:0; padding:0; background:#FFFFFF; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif; color:var(--text); height:auto; }
+  .wrap { display:flex; flex-wrap: wrap; gap:12px; padding:12px; align-items: flex-start; background:#F0F2F5; }
   .panel {
     flex: 1 1 480px; min-width: 320px; max-width: 100%; background:white;
     border:1px solid var(--border); border-radius:10px; overflow:hidden;
@@ -23,19 +23,19 @@
   }
   .panel-header {
     background: linear-gradient(135deg, #2F5FA3 0%, #4C7BC4 100%);
-    color:white; font-weight:700; font-size:14.5px; padding:14px 18px;
+    color:white; font-weight:700; font-size:14.5px; padding:11px 16px;
     display:flex; align-items:center; justify-content:space-between;
   }
   .panel-header .sub { font-size:11px; font-weight:400; opacity:0.85; margin-top:2px; }
-  .stat-row { display:flex; gap:10px; padding:14px 18px 4px; flex-wrap: wrap; }
+  .stat-row { display:flex; gap:8px; padding:10px 14px 2px; flex-wrap: wrap; }
   .stat-chip {
     flex:1; min-width:96px; background:#F7F9FC; border:1px solid var(--border); border-radius:8px;
-    padding:8px 10px; text-align:center;
+    padding:6px 8px; text-align:center;
   }
   .stat-chip .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); font-weight:700; }
   .stat-chip .val { font-size:16px; font-weight:700; color:var(--accent-dark); margin-top:2px; }
   .stat-chip .sub { font-size:9.5px; color:var(--text-muted); margin-top:1px; }
-  .chart-area { position:relative; padding:10px 18px 6px; }
+  .chart-area { position:relative; padding:4px 14px 2px; }
   svg { display:block; width:100%; height:auto; overflow:visible; }
   .axis-label { font-size:9px; fill:var(--text-muted); font-family:'Segoe UI',Arial,sans-serif; }
   .gridline { stroke:#EEF1F5; stroke-width:1; }
@@ -88,8 +88,8 @@ function renderChart(chartId, statsId, values, opts){
   const container = document.getElementById(chartId);
   const labels = CHART_DATA.labels;
   const n = values.length;
-  const W = 600, H = 300;
-  const padL = 34, padR = 10, padT = 18, padB = 56;
+  const W = 600, H = 250;
+  const padL = 34, padR = 10, padT = 12, padB = 50;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const maxV = opts.max, minV = opts.min;
   const stepX = plotW / (n - 1);

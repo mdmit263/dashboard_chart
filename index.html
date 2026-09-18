@@ -59,14 +59,14 @@
 <div class="wrap">
   <div class="panel">
     <div class="panel-header">
-      <div>Delivery Assurance %</div>
+      <div>Cumulative On-Time Share %<div class="sub">Running total, by Target End Month</div></div>
     </div>
     <div class="stat-row" id="statsA"></div>
     <div class="chart-area" id="chartA"></div>
   </div>
   <div class="panel">
     <div class="panel-header">
-      <div>Project Cost Health % </div>
+      <div>Cumulative Avg. Forecasted Margin %<div class="sub">Running total, by Target End Month</div></div>
     </div>
     <div class="stat-row" id="statsB"></div>
     <div class="chart-area" id="chartB"></div>
@@ -74,7 +74,7 @@
 </div>
 
 <script>
-const CHART_DATA = {"otdLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Apr 2027", "May 2027", "Aug 2027", "Jul 2028"], "otdValues": [100.0, 50.0, 33.33, 50.0, 28.57, 20.0, 10.0, 10.34, 8.89, 7.69, 6.56, 5.88, 5.26, 5.13, 5.0, 4.94, 6.02, 5.95], "fnmLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Apr 2027", "May 2027", "Aug 2027", "Jul 2028"], "fnmValues": [22.58, 17.52, 24.12, 21.71, 21.75, 21.46, 21.78, 23.05, 21.64, 21.98, 21.87, 22.11, 22.09, 22.08, 22.06, 22.13, 22.38, 22.39]};
+const CHART_DATA = {"otdLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [100.0, 50.0, 33.33, 50.0, 28.57, 20.0, 10.0, 10.34, 8.89], "fnmLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [22.58, 17.52, 24.12, 21.71, 21.75, 21.46, 21.78, 23.05, 21.64]};
 
 function linePath(pts){
   // Straight segments between actual monthly values. The underlying data swings sharply

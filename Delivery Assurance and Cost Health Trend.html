@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Delivery Assurance &amp; Cost Health Trend</title>
+<style>
+  :root {
+    --accent: #2F5FA3;
+    --accent-dark: #1B3B6F;
+    --border: #E4E8EE;
+    --text: #1F2933;
+    --text-muted: #6B7280;
+    --green: #219653;
+    --red: #C0392B;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background:#F0F2F5; font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif; color:var(--text); }
+  .wrap { display:flex; flex-wrap: wrap; gap:18px; padding:22px; align-items: flex-start; }
+  .panel {
+    flex: 1 1 480px; min-width: 320px; max-width: 100%; background:white;
+    border:1px solid var(--border); border-radius:10px; overflow:hidden;
+    box-shadow: 0 1px 3px rgba(20,30,50,0.06), 0 8px 20px rgba(20,30,50,0.04);
+  }
+  .panel-header {
+    background: linear-gradient(135deg, #2F5FA3 0%, #4C7BC4 100%);
+    color:white; font-weight:700; font-size:14.5px; padding:14px 18px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .panel-header .sub { font-size:11px; font-weight:400; opacity:0.85; margin-top:2px; }
+  .stat-row { display:flex; gap:10px; padding:14px 18px 4px; flex-wrap: wrap; }
+  .stat-chip {
+    flex:1; min-width:96px; background:#F7F9FC; border:1px solid var(--border); border-radius:8px;
+    padding:8px 10px; text-align:center;
+  }
+  .stat-chip .lbl { font-size:9.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); font-weight:700; }
+  .stat-chip .val { font-size:16px; font-weight:700; color:var(--accent-dark); margin-top:2px; }
+  .stat-chip .sub { font-size:9.5px; color:var(--text-muted); margin-top:1px; }
+  .chart-area { position:relative; padding:10px 18px 6px; }
+  svg { display:block; width:100%; height:auto; overflow:visible; }
+  .axis-label { font-size:9px; fill:var(--text-muted); font-family:'Segoe UI',Arial,sans-serif; }
+  .gridline { stroke:#EEF1F5; stroke-width:1; }
+  .line-a { fill:none; stroke:var(--accent); stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; }
+  .area-a { opacity:0.9; }
+  .pt { fill:var(--accent); stroke:white; stroke-width:1.4; cursor:pointer; }
+  .pt-hover { fill:var(--accent-dark); stroke:white; stroke-width:2; pointer-events:none; opacity:0; transition:opacity .08s; }
+  .crosshair { stroke:var(--accent); stroke-width:1; stroke-dasharray:3,3; opacity:0; pointer-events:none; }
+  .hit { fill:transparent; }
+  .tooltip {
+    position:absolute; pointer-events:none; background:var(--accent-dark); color:white;
+    font-size:12px; padding:7px 10px; border-radius:6px; line-height:1.35; opacity:0;
+    transform: translate(-50%, -100%); transition: opacity .08s; white-space:nowrap; z-index:5;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  }
+  .tooltip .tm { font-weight:700; }
+  .tooltip .tn { color:#BFD3EE; font-size:10.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="panel">
+    <div class="panel-header">
+      <div>Delivery Assurance % by Target End Month<div class="sub">Share of projects due each month that are on-time or only slightly late</div></div>
+    </div>
+    <div class="stat-row" id="statsA"></div>
+    <div class="chart-area" id="chartA"></div>
+  </div>
+  <div class="panel">
+    <div class="panel-header">
+      <div>Project Cost Health (Forecasted Margin %)<div class="sub">Average forecasted margin of projects due each month</div></div>
+    </div>
+    <div class="stat-row" id="statsB"></div>
+    <div class="chart-area" id="chartB"></div>
+  </div>
+</div>
+
+<script>
+const CHART_DATA = {"labels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Apr 2027", "May 2027", "Aug 2027", "Jul 2028"], "assurance": [100.0, 0.0, 0.0, 100.0, 0.0, 0.0, 0.0, 11.1, 6.2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 50.0, 0.0], "margin": [22.6, 12.5, 37.3, 14.5, 21.8, 20.8, 22.1, 25.7, 19.2, 24.1, 21.2, 24.2, 21.9, 21.8, 21.2, 27.7, 32.2, 23.7], "totals": [1, 1, 1, 1, 3, 3, 10, 9, 16, 7, 9, 7, 8, 2, 2, 1, 2, 1]};
+
+function linePath(pts){
+  // Straight segments between actual monthly values. The underlying data swings sharply
+  // (0% <-> 100% in adjacent months), so a smoothed spline overshoots past the true values
+  // and bleeds into the axis labels below — straight segments stay exactly on the data and
+  // can never cross outside the plotted range.
+  return 'M' + pts.map(p => p.x + ' ' + p.y).join(' L');
+}
+
+function renderChart(chartId, statsId, values, opts){
+  const container = document.getElementById(chartId);
+  const labels = CHART_DATA.labels;
+  const n = values.length;
+  const W = 600, H = 300;
+  const padL = 34, padR = 10, padT = 18, padB = 56;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const maxV = opts.max, minV = opts.min;
+  const stepX = plotW / (n - 1);
+  const gid = 'grad-' + chartId;
+
+  function x(i){ return padL + i * stepX; }
+  function y(v){ return padT + plotH - ((v - minV) / (maxV - minV)) * plotH; }
+
+  let gridlines = '';
+  const gridCount = 4;
+  for (let i = 0; i <= gridCount; i++){
+    const v = minV + (maxV - minV) * i / gridCount;
+    const yy = y(v);
+    gridlines += `<line class="gridline" x1="${padL}" y1="${yy}" x2="${W-padR}" y2="${yy}"></line>`;
+    gridlines += `<text class="axis-label" x="${padL-6}" y="${yy+3}" text-anchor="end">${Math.round(v)}${opts.suffix||''}</text>`;
+  }
+
+  const pts = values.map((v,i)=>({x:x(i), y:y(v)}));
+  const dPath = linePath(pts);
+  const areaPath = dPath + `L${pts[n-1].x} ${padT+plotH} L${pts[0].x} ${padT+plotH} Z`;
+  const clipId = 'clip-' + chartId;
+
+  let hitAreas = '', xlabels = '';
+  pts.forEach((p,i)=>{
+    const hw = stepX; // width of invisible hover zone around each point
+    hitAreas += `<rect class="hit" x="${p.x - hw/2}" y="${padT}" width="${hw}" height="${plotH}" data-i="${i}"></rect>`;
+    if (n <= 20 || i % Math.ceil(n/20) === 0 || i === n-1){
+      xlabels += `<text class="axis-label" x="0" y="0" text-anchor="end" transform="translate(${p.x},${H-padB+8}) rotate(-65)">${labels[i]}</text>`;
+    }
+  });
+
+  container.innerHTML = `<svg viewBox="0 0 ${W} ${H}" id="svg-${chartId}">
+    <defs>
+      <linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${opts.color}" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="${opts.color}" stop-opacity="0.02"/>
+      </linearGradient>
+      <clipPath id="${clipId}">
+        <rect x="${padL}" y="${padT}" width="${plotW}" height="${plotH}"></rect>
+      </clipPath>
+    </defs>
+    ${gridlines}
+    <g clip-path="url(#${clipId})">
+      <path class="area-a" d="${areaPath}" fill="url(#${gid})" stroke="none"></path>
+      <path class="line-a" d="${dPath}" style="stroke:${opts.color}"></path>
+    </g>
+    ${pts.map((p,i)=>`<circle class="pt" cx="${p.x}" cy="${p.y}" r="3" style="fill:${opts.color}"></circle>`).join('')}
+    <circle class="pt-hover" id="hover-${chartId}" r="5.5" style="fill:${opts.color}"></circle>
+    <line class="crosshair" id="cross-${chartId}" y1="${padT}" y2="${padT+plotH}"></line>
+    ${xlabels}
+    ${hitAreas}
+  </svg>
+  <div class="tooltip" id="tooltip-${chartId}"></div>`;
+
+  // Interactivity
+  const svgEl = document.getElementById('svg-'+chartId);
+  const hoverPt = document.getElementById('hover-'+chartId);
+  const crossLine = document.getElementById('cross-'+chartId);
+  const tooltip = document.getElementById('tooltip-'+chartId);
+  const wrapEl = container;
+
+  function showAt(i){
+    const p = pts[i];
+    hoverPt.setAttribute('cx', p.x); hoverPt.setAttribute('cy', p.y); hoverPt.style.opacity = 1;
+    crossLine.setAttribute('x1', p.x); crossLine.setAttribute('x2', p.x); crossLine.style.opacity = 1;
+    tooltip.innerHTML = `<div class="tm">${labels[i]}</div><div>${values[i]}${opts.suffix||''}</div><div class="tn">${opts.countNote ? CHART_DATA.totals[i] + ' project' + (CHART_DATA.totals[i]===1?'':'s') + ' due' : ''}</div>`;
+    // position tooltip using the SVG's rendered box so it lines up regardless of scaling
+    const box = svgEl.getBoundingClientRect();
+    const wrapBox = wrapEl.getBoundingClientRect();
+    const scale = box.width / W;
+    const leftPx = box.left - wrapBox.left + p.x * scale;
+    const topPx = box.top - wrapBox.top + p.y * scale - 10;
+    tooltip.style.left = leftPx + 'px';
+    tooltip.style.top = topPx + 'px';
+    tooltip.style.opacity = 1;
+  }
+  function hideAll(){
+    hoverPt.style.opacity = 0; crossLine.style.opacity = 0; tooltip.style.opacity = 0;
+  }
+  svgEl.querySelectorAll('.hit').forEach(hit=>{
+    const i = +hit.getAttribute('data-i');
+    hit.addEventListener('mouseenter', ()=>showAt(i));
+    hit.addEventListener('touchstart', (e)=>{ showAt(i); }, {passive:true});
+  });
+  svgEl.addEventListener('mouseleave', hideAll);
+}
+
+function computeStats(values, labels, suffix){
+  const last = values[values.length-1];
+  const sum = values.reduce((a,b)=>a+b,0);
+  const avg = Math.round((sum/values.length)*10)/10;
+  let peakIdx = 0, lowIdx = 0;
+  values.forEach((v,i)=>{ if (v>values[peakIdx]) peakIdx=i; if (v<values[lowIdx]) lowIdx=i; });
+  return { last, avg, peak: values[peakIdx], peakLabel: labels[peakIdx], low: values[lowIdx], lowLabel: labels[lowIdx] };
+}
+
+function renderStats(statsId, values, suffix){
+  const s = computeStats(values, CHART_DATA.labels, suffix);
+  document.getElementById(statsId).innerHTML = `
+    <div class="stat-chip"><div class="lbl">Latest</div><div class="val">${s.last}${suffix}</div><div class="sub">${CHART_DATA.labels[CHART_DATA.labels.length-1]}</div></div>
+    <div class="stat-chip"><div class="lbl">Average</div><div class="val">${s.avg}${suffix}</div><div class="sub">across all months</div></div>
+    <div class="stat-chip"><div class="lbl">Peak</div><div class="val" style="color:var(--green)">${s.peak}${suffix}</div><div class="sub">${s.peakLabel}</div></div>
+    <div class="stat-chip"><div class="lbl">Lowest</div><div class="val" style="color:var(--red)">${s.low}${suffix}</div><div class="sub">${s.lowLabel}</div></div>
+  `;
+}
+
+renderChart('chartA', 'statsA', CHART_DATA.assurance, {min:0, max:100, color:'#2F5FA3', suffix:'%', countNote:true});
+renderChart('chartB', 'statsB', CHART_DATA.margin, {min:10, max:40, color:'#2F5FA3', suffix:'%'});
+renderStats('statsA', CHART_DATA.assurance, '%');
+renderStats('statsB', CHART_DATA.margin, '%');
+
+document.getElementById('footnote').innerHTML =
+  'Based on all 113 projects in the Projects At Risk dataset. Hover any point on a chart for the exact value and how many projects were due that month. Bucket sizes are small in several months — treat single-project months as noisy, not statistically meaningful. One record (M200483-02, Target End Date 07/22/36) was excluded as a likely data-entry typo.';
+</script>
+</body>
+</html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>On Time Delivery &amp; Forecasted Net Margin</title>
+<title>Delivery Assurance &amp; Project Cost Health Trend</title>
 <style>
   :root {
     --accent: #2F5FA3;
@@ -53,20 +53,27 @@
   }
   .tooltip .tm { font-weight:700; }
   .tooltip .tn { color:#BFD3EE; font-size:10.5px; }
+  .pt-low-n { stroke-dasharray: 1.6,1.4; }
+  .methodology { font-size:10.5px; color:var(--text-muted); padding:2px 16px 10px; line-height:1.5; }
+  .methodology b { color:var(--text); }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="panel">
     <div class="panel-header">
-      <div> Delivery Assurance % </div>
+      <div>
+        Delivery Assurance %
+      </div>
     </div>
     <div class="stat-row" id="statsA"></div>
     <div class="chart-area" id="chartA"></div>
   </div>
   <div class="panel">
     <div class="panel-header">
-      <div>Project Cost Health %</div>
+      <div>
+        Project Cost Health %
+      </div>
     </div>
     <div class="stat-row" id="statsB"></div>
     <div class="chart-area" id="chartB"></div>
@@ -74,7 +81,11 @@
 </div>
 
 <script>
-const CHART_DATA = {"otdLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [100.0, 50.0, 33.33, 50.0, 28.57, 20.0, 10.0, 10.34, 8.89], "fnmLabels": ["Jul 2024", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [22.58, 17.52, 24.12, 21.71, 21.75, 21.46, 21.78, 23.05, 21.64]};
+// Computed live from the "Project Intake Sheet" (REV Engineering PMO Intake), 2026-09-21.
+// Delivery Assurance % = (# projects targeted to complete that month with SV% = Green) / (# with any SV% rating that month), Cancelled excluded.
+// Project Cost Health % = average "% Forecasted Completion Margin" among projects targeted to complete that month, Cancelled excluded.
+// Trailing 12 months ending at the current month (Sep 2026), bucketed by Target End Date.
+const CHART_DATA = {"otdLabels": ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [37.5, 100.0, 50.0, 100.0, 50.0, 50.0, 60.0, 71.43, 33.33, 33.33, 81.82, 20.0], "otdN": [8, 2, 2, 1, 4, 4, 5, 7, 3, 15, 11, 10], "fnmLabels": ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [19.27, 21.58, 24.25, 36.0, 19.07, 21.03, 16.84, 34.18, 21.02, 22.04, 28.03, 20.95], "fnmN": [8, 2, 2, 2, 4, 4, 5, 24, 3, 15, 13, 14]};
 
 function linePath(pts){
   // Straight segments between actual monthly values. The underlying data swings sharply
@@ -86,6 +97,7 @@ function linePath(pts){
 
 function renderChart(chartId, statsId, values, labels, opts){
   const container = document.getElementById(chartId);
+  const sampleN = opts.sampleN || [];
   const n = values.length;
   const W = 600, H = 250;
   const padL = 34, padR = 10, padT = 12, padB = 50;
@@ -135,7 +147,12 @@ function renderChart(chartId, statsId, values, labels, opts){
       <path class="area-a" d="${areaPath}" fill="url(#${gid})" stroke="none"></path>
       <path class="line-a" d="${dPath}" style="stroke:${opts.color}"></path>
     </g>
-    ${pts.map((p,i)=>`<circle class="pt" cx="${p.x}" cy="${p.y}" r="3" style="fill:${opts.color}"></circle>`).join('')}
+    ${pts.map((p,i)=>{
+      const low = sampleN[i] !== undefined && sampleN[i] < 5;
+      const fill = low ? 'white' : opts.color;
+      const cls = low ? 'pt pt-low-n' : 'pt';
+      return `<circle class="${cls}" cx="${p.x}" cy="${p.y}" r="3" style="fill:${fill};stroke:${opts.color}"></circle>`;
+    }).join('')}
     <circle class="pt-hover" id="hover-${chartId}" r="5.5" style="fill:${opts.color}"></circle>
     <line class="crosshair" id="cross-${chartId}" y1="${padT}" y2="${padT+plotH}"></line>
     ${xlabels}
@@ -154,7 +171,8 @@ function renderChart(chartId, statsId, values, labels, opts){
     const p = pts[i];
     hoverPt.setAttribute('cx', p.x); hoverPt.setAttribute('cy', p.y); hoverPt.style.opacity = 1;
     crossLine.setAttribute('x1', p.x); crossLine.setAttribute('x2', p.x); crossLine.style.opacity = 1;
-    tooltip.innerHTML = `<div class="tm">${labels[i]}</div><div>${values[i]}${opts.suffix||''}</div>`;
+    const nInfo = sampleN[i] !== undefined ? `<div class="tn">n=${sampleN[i]} project${sampleN[i]===1?'':'s'}${sampleN[i] < 5 ? ' · low sample' : ''}</div>` : '';
+    tooltip.innerHTML = `<div class="tm">${labels[i]}</div><div>${values[i]}${opts.suffix||''}</div>${nInfo}`;
     // position tooltip using the SVG's rendered box so it lines up regardless of scaling
     const box = svgEl.getBoundingClientRect();
     const wrapBox = wrapEl.getBoundingClientRect();
@@ -195,8 +213,8 @@ function renderStats(statsId, values, labels, suffix){
   `;
 }
 
-renderChart('chartA', 'statsA', CHART_DATA.otdValues, CHART_DATA.otdLabels, {min:0, max:100, color:'#2F5FA3', suffix:'%'});
-renderChart('chartB', 'statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, {min:5, max:30, color:'#2F5FA3', suffix:'%'});
+renderChart('chartA', 'statsA', CHART_DATA.otdValues, CHART_DATA.otdLabels, {min:0, max:100, color:'#2F5FA3', suffix:'%', sampleN: CHART_DATA.otdN});
+renderChart('chartB', 'statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, {min:0, max:40, color:'#2F5FA3', suffix:'%', sampleN: CHART_DATA.fnmN});
 renderStats('statsA', CHART_DATA.otdValues, CHART_DATA.otdLabels, '%');
 renderStats('statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, '%');
 </script>

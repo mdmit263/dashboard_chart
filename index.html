@@ -81,11 +81,15 @@
 </div>
 
 <script>
-// Computed live from the "Project Intake Sheet" (REV Engineering PMO Intake), 2026-09-21.
-// Delivery Assurance % = (# projects targeted to complete that month with SV% = Green) / (# with any SV% rating that month), Cancelled excluded.
-// Project Cost Health % = average "% Forecasted Completion Margin" among projects targeted to complete that month, Cancelled excluded.
-// Trailing 12 months ending at the current month (Sep 2026), bucketed by Target End Date.
-const CHART_DATA = {"otdLabels": ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [37.5, 100.0, 50.0, 100.0, 50.0, 50.0, 60.0, 71.43, 33.33, 33.33, 81.82, 20.0], "otdN": [8, 2, 2, 1, 4, 4, 5, 7, 3, 15, 11, 10], "fnmLabels": ["Oct 2025", "Nov 2025", "Dec 2025", "Jan 2026", "Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [19.27, 21.58, 24.25, 36.0, 19.07, 21.03, 16.84, 34.18, 21.02, 22.04, 28.03, 20.95], "fnmN": [8, 2, 2, 2, 4, 4, 5, 24, 3, 15, 13, 14]};
+// Computed from the individual per-project "Project Cost Report" Excel files for the 4 tracked PMs
+// (Andrew Adams, Caley Wiberg, Francois Ngouola, Paul Eveleigh) -- 118 projects, 2026-09-22. Smartsheet is not used.
+// Delivery Assurance % = (# projects targeted to complete that month with Schedule Status = On Track/Ahead) / (# with any Schedule Status that month), Cancelled excluded.
+// Project Cost Health % = average quoted Margin % (Original Estimate block) among projects targeted to complete that month, Cancelled excluded.
+// Bucketed by Forecasted Completion Date; only months with at least 1 project are shown (Feb-Sep 2026 -- this Excel
+// snapshot covers current/active jobs for 4 PMs only, not a full portfolio history, so earlier months have no data).
+// Scope note: this now covers only the 4 PMs' 118 projects (vs. the full portfolio previously), and several months
+// have very few projects (n=1-3) -- those points are shown hollow/dashed per the existing "low sample" styling.
+const CHART_DATA = {"otdLabels": ["Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [100.0, 100.0, 100.0, 0.0, 66.67, 20.0, 100.0, 87.5], "otdN": [1, 1, 1, 2, 3, 10, 8, 16], "fnmLabels": ["Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [15.0, 55.46, 25.57, 11.82, 16.14, 0.82, 15.06, -18.41], "fnmN": [1, 1, 1, 2, 3, 10, 8, 16]};
 
 function linePath(pts){
   // Straight segments between actual monthly values. The underlying data swings sharply
@@ -214,7 +218,7 @@ function renderStats(statsId, values, labels, suffix){
 }
 
 renderChart('chartA', 'statsA', CHART_DATA.otdValues, CHART_DATA.otdLabels, {min:0, max:100, color:'#2F5FA3', suffix:'%', sampleN: CHART_DATA.otdN});
-renderChart('chartB', 'statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, {min:0, max:40, color:'#2F5FA3', suffix:'%', sampleN: CHART_DATA.fnmN});
+renderChart('chartB', 'statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, {min:-30, max:60, color:'#2F5FA3', suffix:'%', sampleN: CHART_DATA.fnmN});
 renderStats('statsA', CHART_DATA.otdValues, CHART_DATA.otdLabels, '%');
 renderStats('statsB', CHART_DATA.fnmValues, CHART_DATA.fnmLabels, '%');
 </script>

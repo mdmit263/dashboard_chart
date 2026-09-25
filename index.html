@@ -81,15 +81,15 @@
 </div>
 
 <script>
-// Computed from the individual per-project "Project Cost Report" Excel files for the 4 tracked PMs
-// (Andrew Adams, Caley Wiberg, Francois Ngouola, Paul Eveleigh) -- 118 projects, 2026-09-22. Smartsheet is not used.
-// Delivery Assurance % = (# projects targeted to complete that month with Schedule Status = On Track/Ahead) / (# with any Schedule Status that month), Cancelled excluded.
-// Project Cost Health % = average quoted Margin % (Original Estimate block) among projects targeted to complete that month, Cancelled excluded.
-// Bucketed by Forecasted Completion Date; only months with at least 1 project are shown (Feb-Sep 2026 -- this Excel
-// snapshot covers current/active jobs for 4 PMs only, not a full portfolio history, so earlier months have no data).
-// Scope note: this now covers only the 4 PMs' 118 projects (vs. the full portfolio previously), and several months
-// have very few projects (n=1-3) -- those points are shown hollow/dashed per the existing "low sample" styling.
-const CHART_DATA = {"otdLabels": ["Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [100.0, 100.0, 100.0, 0.0, 66.67, 20.0, 100.0, 87.5], "otdN": [1, 1, 1, 2, 3, 10, 8, 16], "fnmLabels": ["Feb 2026", "Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [15.0, 55.46, 25.57, 11.82, 16.14, 0.82, 15.06, -18.41], "fnmN": [1, 1, 1, 2, 3, 10, 8, 16]};
+// Recomputed live from the Smartsheet "Project Intake Sheet" -- 120 REV Canada projects (Caley Wiberg, Paul Eveleigh,
+// Francois Ngouola, Andrew Adams only), 2026-09-25. USA jobs (M4000xx / REV USA Project Intake Sheet) are excluded --
+// Canada-only scope per current org structure.
+// Delivery Assurance % = (# projects targeted to complete that month with SV% = Green) / (# with any SV% value that month), Cancelled excluded.
+// Project Cost Health % = average "% Forecasted Completion Margin" among projects targeted to complete that month, Cancelled excluded.
+// Bucketed by Target End Date; only months with at least 1 project are shown, trailing up to the current month (Mar-Sep 2026
+// per the user's earlier choice to keep this chart trailing-to-today rather than showing forward-looking forecast months).
+// A few months still have small samples (n=1-3) -- those points are shown hollow/dashed per the existing "low sample" styling.
+const CHART_DATA = {"otdLabels": ["Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "otdValues": [100.0, 100.0, 33.33, 33.33, 33.33, 81.82, 20.0], "otdN": [1, 2, 3, 3, 15, 11, 10], "fnmLabels": ["Mar 2026", "Apr 2026", "May 2026", "Jun 2026", "Jul 2026", "Aug 2026", "Sep 2026"], "fnmValues": [37.0, 14.92, 36.2, 21.02, 22.04, 28.03, 20.95], "fnmN": [1, 2, 20, 3, 15, 13, 14]};
 
 function linePath(pts){
   // Straight segments between actual monthly values. The underlying data swings sharply

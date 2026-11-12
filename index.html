@@ -82,14 +82,14 @@
 
 <script>
 // Recomputed live from the Smartsheet "Project Intake Sheet" -- 131 projects (Caley Wiberg, Paul Eveleigh,
-// Francois Ngouola, Andrew Adams, Justin Hastie), 2026-11-06 (latest cost-report refresh). USA jobs (M4000xx / REV USA Project Intake Sheet) are excluded --
+// Francois Ngouola, Andrew Adams, Justin Hastie), 2026-11-12 (latest cost-report refresh). USA jobs (M4000xx / REV USA Project Intake Sheet) are excluded --
 // Canada-only scope per current org structure.
 // Delivery Assurance % = (# projects targeted to complete that month with SV% = Green) / (# with any SV% value that month), Cancelled excluded.
 // Project Cost Health % = average "% Forecasted Completion Margin" among projects targeted to complete that month, Cancelled excluded.
 // Bucketed by Target End Date; only months with at least 1 project are shown (April 2026 has none), trailing up to the current month (Mar-Nov 2026
 // per the user's earlier choice to keep this chart trailing-to-today rather than showing forward-looking forecast months).
 // A few months still have small samples (n=1-3) -- those points are shown hollow/dashed per the existing "low sample" styling.
-const CHART_DATA = {"otdLabels":["Mar 2026","May 2026","Jun 2026","Jul 2026","Aug 2026","Sep 2026","Oct 2026","Nov 2026"],"otdValues":[100.0,50.0,25.0,25.0,100.0,81.82,100.0,85.71],"otdN":[1,2,4,4,9,11,7,14],"fnmLabels":["Mar 2026","May 2026","Jun 2026","Jul 2026","Aug 2026","Sep 2026","Oct 2026","Nov 2026"],"fnmValues":[37.0,36.82,23.02,19.25,31.85,22.81,30.32,19.33],"fnmN":[1,17,4,4,9,11,7,14]};
+const CHART_DATA = {"otdLabels":["Mar 2026","May 2026","Jun 2026","Jul 2026","Aug 2026","Sep 2026","Oct 2026","Nov 2026"],"otdValues":[100.0,50.0,25.0,50.0,100.0,77.78,100.0,86.67],"otdN":[1,2,4,4,8,9,7,15],"fnmLabels":["Mar 2026","May 2026","Jun 2026","Jul 2026","Aug 2026","Sep 2026","Oct 2026","Nov 2026"],"fnmValues":[37.0,36.82,23.02,19.25,32.96,22.95,30.32,19.49],"fnmN":[1,17,4,4,8,9,7,15]};
 
 function linePath(pts){
   // Straight segments between actual monthly values. The underlying data swings sharply
